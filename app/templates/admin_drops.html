@@ -1,0 +1,14 @@
+{% extends "admin_base.html" %}
+{% block title %}Drop{% endblock %}
+{% block body %}
+<h2>Drop שבועי</h2>
+<div class="tile">
+  <p class="small" style="color:var(--muted)">המנוע רץ על משתתפים פעילים (שילמו + פרופיל מלא), ומחריג מושהים, משתתפים בהתאמה פעילה וזוגות שכבר הוצגו. התוצאה היא טיוטה: אפשר להסיר זוגות, להחליף מועמד, לייצר טקסטים ולפרסם.</p>
+  <form method="post" action="/admin/drops/generate"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="sbtn primary" type="submit">יצירת טיוטת Drop</button></form>
+</div>
+<div class="table-wrap"><table>
+  <thead><tr><th>#</th><th>שבוע</th><th>סטטוס</th><th>זוגות</th><th>פורסם</th><th>דדליין</th></tr></thead>
+  <tbody>{% for d in drops %}<tr><td><a href="/admin/drops/{{ d.id }}">{{ d.id }}</a></td><td>{{ d.week_start }}</td><td>{{ d.status }}</td><td>{{ d.proposals|length }}</td><td>{{ d.published_at|il }}</td><td>{{ d.deadline_at|il }}</td></tr>
+  {% else %}<tr><td colspan="6" class="small">עוד לא נוצר Drop.</td></tr>{% endfor %}</tbody>
+</table></div>
+{% endblock %}

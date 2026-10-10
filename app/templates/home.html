@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}שלוש{% endblock %}
+{% block body %}
+<div class="pad">
+  {% include "_brand.html" %}
+
+  {% if match %}
+  <div class="tile" style="border:1px solid var(--accent)">
+    <span class="pill">שיחה בלעדית פעילה</span>
+    <h3>את/ה ו{{ partner.first_name }}</h3>
+    <p class="small" style="color:var(--muted)">{% if match.group_opened_at %}קבוצת הוואטסאפ עם עדי פתוחה. יש לכם 7 ימים לקבוע להיפגש.{% else %}הצוות יפתח לכם קבוצת וואטסאפ עם עדי בשעות הקרובות.{% endif %} כל עוד השיחה פעילה, לא יישלחו הצעות חדשות.</p>
+    {% if match.date_happened_at %}<a class="ghost" href="/p/debrief/{{ match.id }}">איך היה הדייט? (תחקיר קצר)</a>{% endif %}
+  </div>
+  {% endif %}
+
+  {% if open_cards %}
+  <a class="tile" href="/p/drop" style="text-decoration:none;color:inherit;border:1px solid var(--accent)">
+    <span class="pill">ה-Drop שלך כאן</span>
+    <h3>{{ open_cards|length }} הצעות מחכות לתשובה</h3>
+    <span class="small">נותרו <b data-hours-left="{{ iso_utc(drop.deadline_at) }}">48</b> שעות לענות</span>
+  </a>
+  {% elif cards %}
+  <a class="ghost" href="/p/drop">ה-Drop האחרון שלך</a>
+  {% endif %}
+
+  {% if not match %}
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <span class="eyebrow">ה-Drop הבא שלך</span>
+    <h2>{{ next_drop|il }}</h2>
+  </div>
+  <div class="tiles3 countdown" data-countdown="{{ iso_utc(next_drop) }}">
+    <div class="tile"><span class="num" data-d>–</span><span class="lbl">ימים</span></div>
+    <div class="tile"><span class="num" data-h>–</span><span class="lbl">שעות</span></div>
+    <div class="tile"><span class="num" data-m>–</span><span class="lbl">דקות</span></div>
+  </div>
+  {% endif %}
+
+  {% if status == "profile_done" %}
+  <div class="notice">הפרופיל שלך מוכן. כדי להיכנס ל-Drop נשאר רק להסדיר את דמי ההשתתפות מול הצוות.</div>
+  {% elif status == "paused" %}
+  <div class="notice">ההשתתפות שלך מושהית כרגע. כתבו לצוות כדי לחזור.</div>
+  {% endif %}
+
+  {% if not survey_done %}
+  <form method="post" action="/p/survey" class="tile form" style="gap:12px">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <span style="font-weight:600;font-size:15px">שאלה אחת לשבוע הזה</span>
+    <span style="font-size:15px;line-height:1.5">עד כמה מרגיש לך ששלוש הצעות בשבוע זה מספיק?</span>
+    <div class="scale chips">{% for v in range(1, 6) %}<label class="chip"><input type="radio" name="score" value="{{ v }}" required><span>{{ v }}</span></label>{% endfor %}</div>
+    <div class="scale-labels"><span>ממש לא מספיק</span><span>בדיוק מספיק</span></div>
+    <button class="ghost" type="submit">שליחה</button>
+  </form>
+  {% endif %}
+
+  <div class="steps">
+    <span style="font-size:14px;font-weight:600">איך זה עובד</span>
+    <div class="step"><span class="n">1</span><span>עד 3 הצעות, כל אחת עם הסבר למה דווקא אתם</span></div>
+    <div class="step"><span class="n">2</span><span>48 שעות לענות. התשובות סופיות, ושיחה נפתחת רק בהתאמה הדדית</span></div>
+    <div class="step"><span class="n">3</span><span>שיחה פעילה אחת בכל פעם, בקבוצת וואטסאפ עם עדי</span></div>
+    <div class="step"><span class="n">4</span><span>אחרי הדייט: תחקיר קצר, וההצעות הבאות מדויקות יותר</span></div>
+  </div>
+</div>
+{% endblock %}

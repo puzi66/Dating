@@ -1,0 +1,59 @@
+{% extends "admin_base.html" %}
+{% block title %}תשובות והתאמות{% endblock %}
+{% macro ans(v, t) -%}
+{% if v == 'yes' %}<b style="color:var(--teal-fg)">כן</b>{% elif v == 'no' %}<span style="color:#f3c2b6">לא</span>{% else %}<span class="small">ממתין</span>{% endif %}{% if t %} <span class="small">{{ t|il(False) }}</span>{% endif %}
+{%- endmacro %}
+{% block body %}
+<h2>תשובות והתאמות</h2>
+{% if drop %}
+<div class="actions" style="align-items:center">
+  {% for d in drops %}<a class="sbtn {{ 'primary' if d.id == drop.id }}" href="/admin/responses?drop={{ d.id }}">Drop #{{ d.id }} · {{ d.week_start }}</a>{% endfor %}
+</div>
+<p class="small">{% if drop.deadline_at and now < drop.deadline_at %}פתוח לתשובות עד {{ drop.deadline_at|il }}{% else %}נסגר לתשובות{% endif %}</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>זוג</th><th>ציון</th><th>תשובה 1</th><th>תשובה 2</th><th>מצב</th></tr></thead>
+  <tbody>{% for pr in drop.proposals %}{% set a = names[pr.user_low_id] %}{% set b = names[pr.user_high_id] %}
+    <tr class="{{ 'hl' if pr.is_mutual }}">
+      <td>{{ a.display_name }} + {{ b.display_name }}</td><td>{{ '%.2f'|format(pr.mutual_score) }}</td>
+      <td>{{ a.first_name }}: {{ ans(pr.response_low, pr.responded_low_at) }}</td>
+      <td>{{ b.first_name }}: {{ ans(pr.response_high, pr.responded_high_at) }}</td>
+      <td>{% if pr.is_mutual and pr.superseded %}<span class="tag">הדדי, אבל אחד הצדדים כבר בהתאמה</span>{% elif pr.is_mutual %}<span class="pill">התאמה הדדית ♥</span>{% endif %}</td>
+    </tr>{% endfor %}</tbody>
+</table></div>
+{% else %}<p class="small">עוד לא פורסם Drop.</p>{% endif %}
+
+<h2 id="matches">התאמות</h2>
+<div class="grid2">
+{% for m in matches %}{% set a = names[m.user_low_id] %}{% set b = names[m.user_high_id] %}
+  <div class="pair" style="{{ 'border-color:var(--accent)' if m.is_active else 'opacity:.75' }}">
+    <div class="who"><b>{{ a.display_name }} + {{ b.display_name }}</b><span class="{{ 'pill' if m.is_active else 'tag' }}">{{ 'פעילה' if m.is_active else 'סגורה' }}</span></div>
+    <div class="small">נוצרה {{ m.created_at|il }}{% if m.closed_at %} · נסגרה {{ m.closed_at|il }} ({{ m.close_reason }}){% endif %}</div>
+    <div class="small" style="color:var(--text)">
+      {{ a.first_name }}: <a class="mono" href="https://wa.me/{{ wa(a.phone) }}" target="_blank" rel="noopener noreferrer">{{ a.phone }}</a> ·
+      {{ b.first_name }}: <a class="mono" href="https://wa.me/{{ wa(b.phone) }}" target="_blank" rel="noopener noreferrer">{{ b.phone }}</a>
+    </div>
+    <div class="small">קבוצה: {{ m.group_opened_at|il if m.group_opened_at else 'עוד לא נפתחה' }} · תגובה תוך 48ש': {{ {True: 'כן', False: 'לא', None: 'לא סומן'}[m.replied_within_48h] }} · דייט: {{ m.date_happened_at|il if m.date_happened_at else 'עוד לא' }}</div>
+    {% if m.is_active %}
+    <form method="post" action="/admin/matches/{{ m.id }}/action" class="actions"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      {% if not m.group_opened_at %}<button class="sbtn primary" name="action" value="group_opened">פתחנו קבוצה</button>{% endif %}
+      <button class="sbtn" name="action" value="replied_yes">הגיבו תוך 48ש'</button>
+      <button class="sbtn" name="action" value="replied_no">לא הגיבו בזמן</button>
+      {% if not m.date_happened_at %}<button class="sbtn" name="action" value="date">הדייט התקיים</button>{% endif %}
+      <button class="sbtn danger" name="action" value="close" onclick="return confirm('לסגור את ההתאמה? שני הצדדים יחזרו למאגר.')">סגירת התאמה</button>
+    </form>
+    {% endif %}
+    <details><summary class="small">קישורי תחקיר לשליחה</summary>
+      <div class="small mono" style="word-break:break-all">{{ base_url }}/p/{{ a.token }}/debrief/{{ m.id }}</div>
+      <div class="small mono" style="word-break:break-all">{{ base_url }}/p/{{ b.token }}/debrief/{{ m.id }}</div>
+    </details>
+    {% for d in m.debriefs %}{% set r = names[d.rater_id] %}
+    <div class="tile" style="padding:10px;background:var(--bg-2)">
+      <span class="small" style="color:var(--text)"><b>{{ r.first_name }}</b>: דירוג {{ d.rating }}/5 · לפגוש שוב: {{ {'yes': 'כן', 'no': 'לא', 'unsure': 'לא בטוח/ה'}[d.meet_again] }} · כמו בתמונות: {{ {'yes': 'כן', 'partly': 'חלקית', 'no': 'לא'}[d.looked_like_photos] }}</span>
+      {% if d.surprise_text %}<span class="small">"{{ d.surprise_text }}"</span>{% endif %}
+      {% if d.weights_after %}<span class="small mono">w: {{ d.weights_before|map('round', 2)|list }} → {{ d.weights_after|map('round', 2)|list }}</span>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+{% else %}<p class="small">עוד אין התאמות.</p>{% endfor %}
+</div>
+{% endblock %}

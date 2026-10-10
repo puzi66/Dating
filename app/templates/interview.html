@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}ראיון עם עדי · שלוש{% endblock %}
+{% block screen_class %}chat-screen{% endblock %}
+{% block body %}
+<div class="chat-head">
+  <div class="avatar" aria-hidden="true">ע</div>
+  <div class="chat-title">
+    <div class="t"><span>עדי · ראיון היכרות</span><span class="small" id="turn-label">{{ turns }}/{{ max_turns }}</span></div>
+    <div class="progress"><div id="progress-bar"></div></div>
+  </div>
+</div>
+<div class="chat-note">שדכנית מהצוות קוראת את התמליל. אפשר לענות בחופשיות ובאורך שנוח לך.</div>
+<div class="chat" id="chat" aria-live="polite" data-turns="{{ turns }}" data-max-turns="{{ max_turns }}" data-min-turns="{{ min_turns }}"
+     data-ended="{{ 1 if p.interview_ended else 0 }}" data-need-reply="{{ 1 if (not messages or messages[-1].role == 'user') else 0 }}">
+  {% for m in messages %}<div class="msg {{ m.role }}">{{ m.content }}</div>{% endfor %}
+</div>
+<div class="composer">
+  <form id="composer" autocomplete="off">
+    <div class="inrow">
+      <textarea id="msg-input" rows="1" placeholder="כתיבת תשובה…" aria-label="התשובה שלך" maxlength="4000"></textarea>
+      <button class="send" id="send-btn" type="submit" aria-label="שליחה"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12H5"></path><path d="M11 6l-6 6 6 6"></path></svg></button>
+    </div>
+  </form>
+  <form id="early-finish" method="post" action="/p/interview/finish" hidden data-busy="עדי מסכמת…">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <button class="ghost" type="submit">סיימתי, אפשר לסכם</button>
+  </form>
+  <form id="finish-box" method="post" action="/p/interview/finish" hidden data-busy="עדי מסכמת… (עד דקה)">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <button class="btn" type="submit">המשך: טעם ומשיכה</button>
+  </form>
+</div>
+{% endblock %}

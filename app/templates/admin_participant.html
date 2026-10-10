@@ -1,0 +1,71 @@
+{% extends "admin_base.html" %}
+{% block title %}{{ p.display_name }}{% endblock %}
+{% block body %}
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+  <h2>{{ p.display_name }} <span class="status {{ status }}">{{ labels[status] }}</span></h2>
+  <div class="actions">
+    <form method="post" action="/admin/participants/{{ p.id }}/action" class="actions"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      {% if p.paid_at %}<button class="sbtn" name="action" value="unmark_paid">בטל תשלום</button>{% else %}<button class="sbtn primary" name="action" value="mark_paid">סמן שילם</button>{% endif %}
+      {% if p.paused %}<button class="sbtn" name="action" value="unpause">הפעל</button>{% else %}<button class="sbtn danger" name="action" value="pause">השהה</button>{% endif %}
+      <button class="sbtn" name="action" value="rotate_token" onclick="return confirm('הקישור הישן יפסיק לעבוד. להמשיך?')">קישור חדש</button>
+      {% if p.interview_done_at %}<button class="sbtn" name="action" value="reopen_interview" onclick="return confirm('לפתוח מחדש את הראיון למשתתף/ת?')">פתיחת ראיון מחדש</button>{% endif %}
+    </form>
+  </div>
+</div>
+{% if created %}<div class="ok">נוצר/ה. שלחו בוואטסאפ את הקישור האישי:</div>{% endif %}
+<div class="tile">
+  <span class="small">קישור אישי (סודי – לשלוח רק למשתתף/ת)</span>
+  <div class="actions" style="align-items:center"><span class="mono" style="word-break:break-all">{{ invite }}</span>
+    <button class="sbtn primary" type="button" data-copy="{{ invite }}">העתקה</button>
+    <a class="sbtn" target="_blank" rel="noopener noreferrer" href="https://wa.me/{{ wa }}">וואטסאפ</a></div>
+</div>
+
+<div class="grid2">
+  <div class="tile">
+    <h3>עובדות</h3>
+    {% if p.facts_done_at %}
+    <div class="small" style="color:var(--text);line-height:1.8">
+      {{ fact_labels.gender.get(p.gender, p.gender) }}, {{ p.age }}, {{ cities.get(p.city, (p.city,))[0] }} · מחפש/ת: {{ p.seeking|join(', ') }} בגילאי {{ p.age_min }}–{{ p.age_max }}, עד {{ p.max_distance_km|int }} ק"מ<br>
+      {{ fact_labels.intent.get(p.intent) }} · {{ fact_labels.religiosity.get(p.religiosity) }} · {{ fact_labels.smoking.get(p.smoking) }}<br>
+      ילדים: {{ 'יש' if p.has_kids else 'אין' }} · רוצה: {{ fact_labels.wants_kids.get(p.wants_kids) }} · מקבל/ת בן/בת זוג עם ילדים: {{ 'כן' if p.accepts_partner_with_kids else 'לא' }}
+    </div>
+    <div class="photos">{% for ph in p.photos %}<figure><a href="/admin/media/{{ ph.id }}" target="_blank"><img src="/admin/media/{{ ph.id }}" alt=""></a></figure>{% endfor %}</div>
+    {% else %}<span class="small">עוד לא מולא.</span>{% endif %}
+    <h3 style="margin-top:8px">טעם ויזואלי (פיילוט)</h3>
+    {% if p.visual_answers %}<div class="small">{% for key, text in visual_statements %}{{ text }}: <b>{{ p.visual_answers.get(key) }}</b>/5<br>{% endfor %}</div>{% else %}<span class="small">עוד לא מולא.</span>{% endif %}
+    <span class="small">משקלים נלמדים: ערכים {{ '%.2f'|format(p.w_values) }} · ויזואלי {{ '%.2f'|format(p.w_visual) }} · אורח חיים {{ '%.2f'|format(p.w_lifestyle) }} ({{ p.w_updates }} עדכונים)</span>
+  </div>
+
+  <div class="tile">
+    <h3>תמליל הראיון ({{ p.messages|length }} הודעות)</h3>
+    {% if p.profile_error %}<div class="error">חילוץ הפרופיל נכשל: {{ p.profile_error }}</div>{% endif %}
+    <div class="transcript">{% for m in p.messages %}<div class="msg {{ m.role }}" style="max-width:92%">{{ m.content }}</div>{% else %}<span class="small">אין עדיין.</span>{% endfor %}</div>
+    {% if p.messages %}<form method="post" action="/admin/participants/{{ p.id }}/extract" data-busy="מחלצים…"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="sbtn" type="submit">חילוץ פרופיל מחדש מהתמליל (Claude)</button></form>{% endif %}
+  </div>
+</div>
+
+<form method="post" action="/admin/participants/{{ p.id }}/profile" class="tile form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <h3>פרופיל (ניתן לעריכה)</h3>
+  <div class="two">
+    <div class="field"><label>שם פרטי</label><input type="text" name="first_name" value="{{ p.first_name }}"></div>
+    <div class="field"><label>שם משפחה</label><input type="text" name="last_name" value="{{ p.last_name }}"></div>
+  </div>
+  <div class="field"><label>טלפון</label><input type="tel" name="phone" value="{{ p.phone }}" dir="ltr"></div>
+  <div class="field"><label>סיכום (לצוות בלבד)</label><textarea name="summary">{{ p.summary }}</textarea></div>
+  <div class="field"><span class="label">מה אני מחפש/ת (נכנס לטקסט "למה שניכם")</span>
+    {% for i in range(3) %}<input type="text" name="look{{ i }}" value="{{ (p.looking_for or [])[i] if (p.looking_for or [])|length > i else '' }}">{% endfor %}</div>
+  <div class="field"><span class="label">אורח חיים</span>
+    {% for k, label in lifestyle_fields.items() %}<label class="small">{{ label }}<input type="text" name="life_{{ k }}" value="{{ (p.lifestyle or {}).get(k, '') }}"></label>{% endfor %}</div>
+  <div class="field"><span class="label">ערכים (0–10) → וקטור הערכים של המנוע</span>
+    <div class="vals">{% for name in value_names %}<label>{{ value_he[name] }}<input type="number" min="0" max="10" name="v{{ loop.index0 }}" value="{{ (p.values_scores or {}).get(name, 5) }}"></label>{% endfor %}</div></div>
+  <div class="field"><label>דגלים לשדכנית (שורה לכל דגל, לא נחשף לאף משתתף)</label><textarea name="red_flags">{{ (p.red_flags or [])|join('\n') }}</textarea></div>
+  <div class="field"><label>הערות צוות</label><textarea name="notes">{{ p.notes }}</textarea></div>
+  <button class="btn" type="submit" style="max-width:280px">שמירה</button>
+</form>
+
+{% if matches %}
+<div class="tile"><h3>התאמות</h3>
+{% for m in matches %}<div class="small">#{{ m.id }} · {{ m.created_at|il }} · {{ 'פעילה' if m.is_active else 'סגורה (' ~ m.close_reason ~ ')' }}</div>{% endfor %}
+</div>{% endif %}
+{% endblock %}

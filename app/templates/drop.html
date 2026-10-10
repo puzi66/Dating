@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}ה-Drop שלך · שלוש{% endblock %}
+{% block body %}
+<div class="pad">
+  <div style="display:flex;justify-content:space-between;align-items:center">{% include "_brand.html" %}<a class="small" href="/p/home">למסך הבית</a></div>
+  <div style="display:flex;flex-direction:column;gap:6px">
+    {% if open %}<span class="eyebrow">{{ drop.published_at|il }} · נותרו <b data-hours-left="{{ iso_utc(drop.deadline_at) }}">48</b> שעות לבחור (עד {{ drop.deadline_at|il }})</span>
+    {% else %}<span class="eyebrow">הזמן לענות על ה-Drop הזה הסתיים</span>{% endif %}
+    <h2>ה-Drop שלך</h2>
+    <p class="small">כל תשובה היא סופית. שיחה נפתחת רק אם גם הצד השני אמר כן.</p>
+  </div>
+  <div class="cards">
+  {% for c in cards %}
+    <article class="pcard" aria-label="{{ c.first_name }}">
+      <div class="gallery">{% for ph in c.photos %}<img src="/media/{{ ph }}" alt="{{ c.first_name }}, תמונה {{ loop.index }}" loading="lazy">{% endfor %}</div>
+      <div class="body">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+          <span class="name">{{ c.first_name }}, {{ c.age }}</span>
+          <span class="small" style="color:var(--muted-2)">{{ c.city }}</span>
+        </div>
+        <div class="why"><b>למה דווקא אתם</b><p>{{ c.why }}</p></div>
+        {% if c.my_answer == "yes" %}<span class="answered">✓ אמרת כן. נעדכן אם זה הדדי</span>
+        {% elif c.my_answer == "no" %}<span class="answered no">ויתרת על ההצעה הזו</span>
+        {% elif open %}
+        <div class="row">
+          <form method="post" action="/p/drop/answer" data-q="לוותר על {{ c.first_name }}? התשובה סופית." onsubmit="return confirm(this.dataset.q)">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="proposal_id" value="{{ c.id }}"><input type="hidden" name="answer" value="no">
+            <button class="ghost" type="submit">לא הפעם</button></form>
+          <form method="post" action="/p/drop/answer" style="flex:2">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="proposal_id" value="{{ c.id }}"><input type="hidden" name="answer" value="yes">
+            <button class="btn" type="submit">כן, מעניין אותי</button></form>
+        </div>
+        {% else %}<span class="answered no">לא נענה בזמן</span>{% endif %}
+      </div>
+    </article>
+  {% endfor %}
+  </div>
+</div>
+{% endblock %}

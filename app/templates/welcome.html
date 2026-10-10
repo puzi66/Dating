@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}ברוכים הבאים · שלוש{% endblock %}
+{% block body %}
+<div class="pad">
+  {% include "_brand.html" %}
+  <h1>שלוש הצעות בשבוע.<br>שיחה אחת.<br>אדם אחד.</h1>
+  <p class="lead">היי {{ p.first_name }}, ברוכים הבאים לפיילוט של שלוש. בלי החלקות אינסופיות: עדי, השדכנית הדיגיטלית שלנו, מכירה אותך לעומק ובוחרת בשבילך רק את מי שבאמת מתאים.</p>
+  <div class="tiles3">
+    <div class="tile"><span class="num">3</span><span class="lbl">הצעות בשבוע</span></div>
+    <div class="tile"><span class="num">1</span><span class="lbl">שיחה פעילה</span></div>
+    <div class="tile"><span class="num">4</span><span class="lbl">שבועות פיילוט</span></div>
+  </div>
+
+  <div class="steps">
+    <span style="font-size:15px;font-weight:600">איך הפיילוט עובד</span>
+    <div class="step"><span class="n">1</span><span>ממלאים פרטים בסיסיים ותמונות, ומדברים עם עדי כרבע שעה בצ'אט.</span></div>
+    <div class="step"><span class="n">2</span><span>בכל יום ראשון ב-20:00 מגיע ה-Drop: עד 3 הצעות, ו-48 שעות לענות כן או לא.</span></div>
+    <div class="step"><span class="n">3</span><span>כששני הצדדים אומרים כן, הצוות פותח לכם קבוצת וואטסאפ עם עדי. שיחה אחת בכל פעם.</span></div>
+    <div class="step"><span class="n">4</span><span>אחרי הדייט: 4 שאלות קצרות, וההצעות הבאות מדויקות יותר.</span></div>
+  </div>
+
+  <div class="notice">
+    <b style="color:var(--text)">שקיפות:</b> זה פיילוט, ויש בו שדכנית אנושית מהצוות. היא קוראת את תמליל הראיון עם עדי ואת הפרופיל שנבנה ממנו, ועוברת על כל הצעה לפני שהיא נשלחת. משתתפים אחרים רואים רק שם פרטי, גיל, עיר, תמונות והסבר קצר למה אתם מתאימים, ורק אם הוצעתם זה לזה.
+  </div>
+  <div class="tile">
+    <div style="display:flex;justify-content:space-between;align-items:baseline"><b>דמי השתתפות</b><span style="font-family:var(--serif);font-size:30px;color:var(--accent)">{{ fee }}₪</span></div>
+    <p class="small" style="color:var(--muted)">לכל ארבעת השבועות. התשלום נגבה ידנית על ידי הצוות (נשלח אליך קישור לתשלום בנפרד). <b style="color:var(--text)">אחריות:</b> אם לא יהיה לך אף דייט במהלך הפיילוט, הכסף חוזר במלואו.</p>
+  </div>
+
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+  <form method="post" class="form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label class="check"><input type="checkbox" name="consent" value="1" {% if p.consented_at %}checked{% endif %} required>
+      <span>קראתי והבנתי: שדכנית אנושית קוראת את הראיון ואת הפרופיל ובודקת את ההצעות, המידע נשמר לצורכי הפיילוט בלבד, ואני בן/בת 18 ומעלה ופנוי/ה לקשר.</span></label>
+    <button class="btn" type="submit">בואו נתחיל</button>
+  </form>
+  <p class="small" style="text-align:center">אפשר לבקש מחיקה של כל המידע שלך בכל שלב, בהודעה לצוות.</p>
+</div>
+{% endblock %}

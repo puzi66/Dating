@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="pad">
+  {% include "_brand.html" %}
+  <div class="grow" style="display:flex;flex-direction:column;justify-content:center;gap:16px">
+    <h2>{{ title }}</h2>
+    <p class="lead">{{ body }}</p>
+  </div>
+  {% if link %}<a class="btn" href="{{ link }}">{{ link_text }}</a>{% endif %}
+</div>
+{% endblock %}

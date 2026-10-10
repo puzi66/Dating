@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#17120F">
+<meta name="csrf-token" content="{{ csrf_token }}">
+<meta name="referrer" content="no-referrer">
+<title>{% block title %}שלוש{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700&family=Rubik:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<main class="screen {% block screen_class %}{% endblock %}">
+{% block body %}{% endblock %}
+</main>
+<script src="/static/app.js" defer></script>
+</body>
+</html>

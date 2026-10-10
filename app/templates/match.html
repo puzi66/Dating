@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}התאמה הדדית · שלוש{% endblock %}
+{% block body %}
+<div class="pad center" style="padding-top:56px">
+  <span class="accent" style="font-size:14px;font-weight:600">התאמה הדדית</span>
+  <div class="ring">{% if photo %}<img src="/media/{{ photo }}" alt="{{ partner.first_name }}">{% endif %}</div>
+  <h2 style="font-size:36px">זה הדדי!<br>גם {{ partner.first_name }} אמר/ה כן.</h2>
+  <p class="lead">מעכשיו זו השיחה הפעילה היחידה שלך. בשעות הקרובות הצוות יפתח לשניכם קבוצת וואטסאפ עם עדי, שתעזור לשבור את הקרח ולקבוע להיפגש. יש לכם 7 ימים לקבוע דייט.</p>
+  <div class="notice" style="text-align:right">חשוב: עד שהקבוצה נפתחת לא צריך לעשות כלום. עם פתיחת הקבוצה, נשמח שתגיבו תוך 48 שעות.</div>
+  <div class="grow"></div>
+  <a class="btn" href="/p/home">הבנתי</a>
+</div>
+{% endblock %}

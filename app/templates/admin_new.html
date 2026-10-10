@@ -1,0 +1,12 @@
+{% extends "admin_base.html" %}
+{% block title %}משתתף/ת חדש/ה{% endblock %}
+{% block body %}
+<h2>משתתף/ת חדש/ה</h2>
+<form method="post" class="form" style="max-width:420px">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <div class="field"><label for="fn">שם פרטי (מוצג להצעות)</label><input id="fn" type="text" name="first_name" required maxlength="80"></div>
+  <div class="field"><label for="ln">שם משפחה (רק לצוות)</label><input id="ln" type="text" name="last_name" maxlength="80"></div>
+  <div class="field"><label for="ph">טלפון</label><input id="ph" type="tel" name="phone" required placeholder="050-0000000" dir="ltr"></div>
+  <button class="btn" type="submit">יצירה וקבלת קישור אישי</button>
+</form>
+{% endblock %}

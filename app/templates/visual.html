@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}משיכה · שלוש{% endblock %}
+{% block body %}
+<div class="pad">
+  {% include "_brand.html" %}
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <span class="eyebrow">שלב 3 מתוך 3 · דקה</span>
+    <h2>ומה לגבי משיכה?</h2>
+    <p class="lead">שלושה משפטים קצרים. אין תשובה נכונה, וזה עוזר לנו להבין כמה משקל לתת למראה לעומת כל השאר.</p>
+  </div>
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+  <form method="post" class="form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    {% for key, text in statements %}
+    <div class="field tile">
+      <span class="label" style="font-weight:500;font-size:16px;line-height:1.45">{{ text }}</span>
+      <div class="scale chips">{% for v in range(1, 6) %}<label class="chip"><input type="radio" name="{{ key }}" value="{{ v }}" {% if (p.visual_answers or {}).get(key) == v %}checked{% endif %} required><span>{{ v }}</span></label>{% endfor %}</div>
+      <div class="scale-labels"><span>בכלל לא</span><span>מאוד</span></div>
+    </div>
+    {% endfor %}
+    <div class="notice">בגרסה המלאה: כיול עם פנים סינתטיות שנוצרו ב-AI. בפיילוט, השדכנית משלימה את התמונה.</div>
+    <button class="btn" type="submit">סיום</button>
+  </form>
+</div>
+{% endblock %}

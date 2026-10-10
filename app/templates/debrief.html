@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}תחקיר · שלוש{% endblock %}
+{% macro choice(name, choices) -%}
+<div class="chips">{% for v, label in choices %}<label class="chip"><input type="radio" name="{{ name }}" value="{{ v }}" required><span>{{ label }}</span></label>{% endfor %}</div>
+{%- endmacro %}
+{% block body %}
+<div class="pad">
+  {% include "_brand.html" %}
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <span class="eyebrow">תחקיר עם עדי · 2 דקות</span>
+    <h2>איך היה עם {{ partner.first_name }}?</h2>
+    <p class="lead" style="font-size:15px">התשובות נשארות אצלנו ולא מועברות לצד השני. הן מלמדות את עדי מה באמת עובד לך.</p>
+  </div>
+  {% if done %}
+  <div class="ok">כבר מילאת את התחקיר הזה. תודה!</div>
+  <a class="btn" href="/p/home">למסך הבית</a>
+  {% else %}
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+  <form method="post" class="form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <div class="field"><span class="label">1. איך היה, מ-1 עד 5?</span>
+      <div class="scale chips">{% for v in range(1, 6) %}<label class="chip"><input type="radio" name="rating" value="{{ v }}" required><span>{{ v }}</span></label>{% endfor %}</div>
+      <div class="scale-labels"><span>לא משהו</span><span>מעולה</span></div></div>
+    <div class="field"><span class="label">2. רוצה להיפגש שוב?</span>{{ choice("meet_again", meet_again) }}</div>
+    <div class="field"><label for="surprise">3. מה התאים יותר, או פחות, ממה שציפית?</label>
+      <textarea id="surprise" name="surprise_text" maxlength="2000" placeholder="כמה מילים, בחופשיות"></textarea></div>
+    <div class="field"><span class="label">4. {{ partner.first_name }} נראה/תה כמו בתמונות?</span>{{ choice("looked_like_photos", looked_like) }}</div>
+    <button class="btn" type="submit">שליחה לעדי</button>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}

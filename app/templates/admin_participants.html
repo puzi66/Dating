@@ -1,0 +1,32 @@
+{% extends "admin_base.html" %}
+{% block title %}משתתפים{% endblock %}
+{% block body %}
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+  <h2>משתתפים <span class="small">({{ rows|length }})</span></h2>
+  <a class="sbtn primary" href="/admin/participants/new">+ משתתף/ת חדש/ה</a>
+</div>
+<div class="actions">{% for k, label in labels.items() %}<span class="status {{ k }}">{{ label }}: {{ counts.get(k, 0) }}</span>{% endfor %}
+  <span class="tag">Claude: {{ 'אמיתי' if llm_name == 'anthropic' else 'מדומה (אין מפתח)' }}</span></div>
+<div class="table-wrap"><table>
+  <thead><tr><th>#</th><th>שם</th><th>טלפון</th><th>סטטוס</th><th>שלבים</th><th>קישור</th><th>פעולות</th></tr></thead>
+  <tbody>
+  {% for r in rows %}{% set p = r.p %}
+  <tr>
+    <td>{{ p.id }}</td>
+    <td><a href="/admin/participants/{{ p.id }}">{{ p.display_name }}</a>{% if p.red_flags %} <span class="tag" title="דגלים לשדכנית">⚑ {{ p.red_flags|length }}</span>{% endif %}{% if p.profile_error %} <span class="tag">חילוץ נכשל</span>{% endif %}</td>
+    <td class="mono">{{ p.phone }}</td>
+    <td><span class="status {{ r.status }}">{{ labels[r.status] }}</span></td>
+    <td class="small">{{ '✓' if p.consented_at else '·' }} הסכמה · {{ '✓' if p.facts_done_at else '·' }} פרטים · {{ '✓' if p.interview_done_at else '·' }} ראיון · {{ '✓' if p.visual_done_at else '·' }} טעם · {{ '✓' if p.paid_at else '·' }} תשלום</td>
+    <td><div class="actions"><button class="sbtn" type="button" data-copy="{{ r.invite }}">העתקת קישור</button>
+      <a class="sbtn" target="_blank" rel="noopener noreferrer" href="https://wa.me/{{ r.wa }}">וואטסאפ</a></div></td>
+    <td><div class="actions">
+      <form method="post" action="/admin/participants/{{ p.id }}/action" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="back" value="/admin">
+        {% if p.paid_at %}<button class="sbtn" name="action" value="unmark_paid">בטל תשלום</button>{% else %}<button class="sbtn primary" name="action" value="mark_paid">סמן שילם</button>{% endif %}
+        {% if p.paused %}<button class="sbtn" name="action" value="unpause">הפעל</button>{% else %}<button class="sbtn danger" name="action" value="pause">השהה</button>{% endif %}
+      </form>
+      <a class="sbtn" href="/admin/participants/{{ p.id }}">פרופיל ותמליל</a></div></td>
+  </tr>
+  {% else %}<tr><td colspan="7" class="small">עוד אין משתתפים.</td></tr>{% endfor %}
+  </tbody>
+</table></div>
+{% endblock %}

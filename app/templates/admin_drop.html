@@ -1,0 +1,81 @@
+{% extends "admin_base.html" %}
+{% block title %}Drop #{{ drop.id }}{% endblock %}
+{% macro bars(f) -%}
+<div class="bars">
+  {% for label, v in [("ערכים", f[0]), ("ויזואלי", f[1]), ("אורח חיים", f[2])] %}<span>{{ label }}</span><div class="bar"><div style="width:{{ (v * 100)|round|int }}%"></div></div><span>{{ '%.2f'|format(v) }}</span>{% endfor %}
+</div>
+{%- endmacro %}
+{% block body %}
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+  <h2>Drop #{{ drop.id }} <span class="status {{ 'active' if drop.status == 'published' else '' }}">{{ {'draft': 'טיוטה', 'published': 'פורסם', 'closed': 'סגור'}[drop.status] }}</span></h2>
+  <span class="small">שבוע {{ drop.week_start }}{% if drop.deadline_at %} · דדליין {{ drop.deadline_at|il }}{% endif %}</span>
+</div>
+<div class="kpis">
+  <div class="kpi"><span class="v">{{ drop.proposals|length }}</span><span class="k">זוגות</span></div>
+  <div class="kpi"><span class="v">{{ load|length }}</span><span class="k">משתתפים שמקבלים הצעה</span></div>
+  <div class="kpi"><span class="v">{{ drop.stats.get('eligible', '–') }}</span><span class="k">זמינים במאגר (מתוך {{ drop.stats.get('pool', '–') }} פעילים)</span></div>
+  <div class="kpi"><span class="v">{{ drop.stats.get('uncovered', [])|length }}</span><span class="k">עם מועמדים אבל בלי הצעה</span></div>
+</div>
+{% if drop.stats.get('excluded_paused') or drop.stats.get('excluded_in_match') %}
+<p class="small">הוחרגו: {% for i in drop.stats.get('excluded_paused', []) %}{{ names[i].display_name }} (מושהה) {% endfor %}{% for i in drop.stats.get('excluded_in_match', []) %}{{ names[i].display_name }} (בהתאמה) {% endfor %}</p>
+{% endif %}
+
+{% if drop.status == 'draft' %}
+<div class="tile">
+  <div class="actions">
+    <form method="post" action="/admin/drops/{{ drop.id }}/why" data-busy="כותבים…"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="sbtn primary" type="submit">יצירת טקסטים "למה שניכם" (Claude{{ '' if llm_name == 'anthropic' else ' מדומה' }})</button></form>
+    <form method="post" action="/admin/drops/{{ drop.id }}/why" data-busy="כותבים…"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="all" value="1"><button class="sbtn" type="submit">כתיבה מחדש לכולם</button></form>
+    <form method="post" action="/admin/drops/generate" onsubmit="return confirm('הטיוטה הנוכחית ותיקונים ידניים יימחקו. להמשיך?')"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="sbtn" type="submit">הרצת המנוע מחדש</button></form>
+    <form method="post" action="/admin/drops/{{ drop.id }}/publish" onsubmit="return confirm('לפרסם? המשתתפים יראו את ההצעות מיד, וה-48 שעות מתחילות עכשיו.')"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="sbtn primary" type="submit">פרסום ({{ drop.proposals|length }} זוגות, 48 שעות)</button></form>
+  </div>
+  <span class="small">תקרה: עד {{ cap }} הצעות למשתתף/ת. הטקסטים לא כוללים דגלים או פרטים מהראיון, ואפשר לערוך כל טקסט לפני הפרסום.</span>
+</div>
+{% endif %}
+
+{% if swap %}
+<div class="tile" id="swap" style="border:1px solid var(--accent)">
+  <h3>החלפה: מועמד/ת אחר/ת ל{{ swap.keep.display_name }} במקום {{ swap.replace.display_name }}</h3>
+  <span class="small">רק מועמדים שעוברים את הפילטרים בשני הכיוונים ושלא הוצגו קודם. מועמד/ת עם {{ cap }} הצעות לא זמין/ה.</span>
+  <div class="table-wrap"><table>
+    <thead><tr><th>מועמד/ת</th><th>ציון הדדי</th><th>הצעות בדרופ</th><th></th></tr></thead>
+    <tbody>{% for c in swap.candidates %}<tr>
+      <td><a href="/admin/participants/{{ c.id }}" target="_blank">{{ c.name }}</a></td><td>{{ '%.3f'|format(c.mutual) }}</td><td>{{ c.load }}/{{ cap }}</td>
+      <td>{% if c.available %}<form method="post" action="/admin/drops/{{ drop.id }}/swap"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="proposal_id" value="{{ swap.proposal.id }}"><input type="hidden" name="keep" value="{{ swap.keep.id }}"><input type="hidden" name="new_partner" value="{{ c.id }}"><button class="sbtn primary" type="submit">החלפה</button></form>{% else %}<span class="small">מלא/ה</span>{% endif %}</td>
+    </tr>{% else %}<tr><td colspan="4" class="small">אין מועמדים חלופיים.</td></tr>{% endfor %}</tbody>
+  </table></div>
+  <a class="sbtn" href="/admin/drops/{{ drop.id }}">ביטול</a>
+</div>
+{% endif %}
+
+<div class="grid2">
+{% for pr in drop.proposals %}{% set a = names[pr.user_low_id] %}{% set b = names[pr.user_high_id] %}
+  <div class="pair" id="pair-{{ pr.id }}">
+    <div class="who">
+      <b><a href="/admin/participants/{{ a.id }}">{{ a.display_name }}</a> ({{ a.age }}, {{ load[a.id] }}/{{ cap }}) + <a href="/admin/participants/{{ b.id }}">{{ b.display_name }}</a> ({{ b.age }}, {{ load[b.id] }}/{{ cap }})</b>
+      <span class="pill">{{ '%.3f'|format(pr.mutual_score) }}</span>
+    </div>
+    <div class="small">S({{ a.first_name }}→{{ b.first_name }}) = {{ '%.3f'|format(pr.score_low_to_high) }} · S({{ b.first_name }}→{{ a.first_name }}) = {{ '%.3f'|format(pr.score_high_to_low) }}{% if pr.source == 'swap' %} · <span class="tag">החלפה ידנית</span>{% endif %}</div>
+    <div class="two">
+      <div><span class="small">{{ a.first_name }}→{{ b.first_name }}</span>{{ bars(pr.features.low_high) }}</div>
+      <div><span class="small">{{ b.first_name }}→{{ a.first_name }}</span>{{ bars(pr.features.high_low) }}</div>
+    </div>
+    <div class="actions">{% for s in pr.explanation.get('top_signals', []) %}<span class="tag">{{ s.label }}</span>{% endfor %}</div>
+    {% if a.red_flags or b.red_flags %}<div class="small" style="color:#f3c2b6">⚑ {% for f in a.red_flags %}{{ a.first_name }}: {{ f }}. {% endfor %}{% for f in b.red_flags %}{{ b.first_name }}: {{ f }}. {% endfor %}</div>{% endif %}
+    {% if drop.status == 'draft' %}
+    <form method="post" action="/admin/drops/{{ drop.id }}/text" class="form" style="gap:6px">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="proposal_id" value="{{ pr.id }}">
+      <textarea name="why_text" placeholder="טקסט 'למה שניכם' (חובה לפני פרסום)" style="min-height:80px">{{ pr.why_text }}</textarea>
+      <button class="sbtn" type="submit">שמירת טקסט</button>
+    </form>
+    <div class="actions">
+      <a class="sbtn" href="/admin/drops/{{ drop.id }}?swap={{ pr.id }}&keep={{ a.id }}#swap">מועמד/ת אחר/ת ל{{ a.first_name }}</a>
+      <a class="sbtn" href="/admin/drops/{{ drop.id }}?swap={{ pr.id }}&keep={{ b.id }}#swap">מועמד/ת אחר/ת ל{{ b.first_name }}</a>
+      <form method="post" action="/admin/drops/{{ drop.id }}/remove" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="proposal_id" value="{{ pr.id }}"><button class="sbtn danger" type="submit">הסרת הזוג</button></form>
+    </div>
+    {% else %}
+    <p class="small" style="color:var(--text-soft)">{{ pr.why_text }}</p>
+    {% endif %}
+  </div>
+{% else %}<p class="small">אין זוגות. ייתכן שאין מספיק משתתפים פעילים שעוברים את הפילטרים.</p>{% endfor %}
+</div>
+{% endblock %}

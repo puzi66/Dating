@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}פרטים בסיסיים · שלוש{% endblock %}
+{% macro radio(name, choices, current) -%}
+<div class="chips">{% for v, label in choices %}<label class="chip"><input type="radio" name="{{ name }}" value="{{ v }}" {% if current is not none and current|string == v|string %}checked{% endif %} required><span>{{ label }}</span></label>{% endfor %}</div>
+{%- endmacro %}
+{% block body %}
+<div class="pad">
+  {% include "_brand.html" %}
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <span class="eyebrow">שלב 1 מתוך 3 · 3 דקות</span>
+    <h2>קצת עובדות, בלי פילוסופיה</h2>
+    <p class="lead">הפרטים האלה קובעים למי בכלל נציע אותך. על כל השאר נדבר עם עדי.</p>
+  </div>
+  {% if errors %}<div class="error">{% for e in errors %}<div>{{ e }}</div>{% endfor %}</div>{% endif %}
+  <form method="post" enctype="multipart/form-data" class="form" data-busy="שומרים…">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+    <div class="field"><span class="label">אני</span>{{ radio("gender", genders, p.gender) }}</div>
+    <div class="field"><span class="label">מחפש/ת</span>
+      <div class="chips">{% for v, label in seeking %}<label class="chip"><input type="checkbox" name="seeking" value="{{ v }}" {% if v in (p.seeking or []) %}checked{% endif %}><span>{{ label }}</span></label>{% endfor %}</div>
+    </div>
+    <div class="two">
+      <div class="field"><label for="age">הגיל שלי</label><input id="age" type="number" name="age" min="18" max="99" inputmode="numeric" value="{{ p.age or '' }}" required></div>
+      <div class="field"><label for="city">עיר</label>
+        <select id="city" name="city" required><option value="">בחירה</option>{% for key, c in cities.items() %}<option value="{{ key }}" {% if p.city == key %}selected{% endif %}>{{ c[0] }}</option>{% endfor %}</select></div>
+    </div>
+    <div class="field"><span class="label">טווח גילאים שמתאים לי</span>
+      <div class="two">
+        <input type="number" name="age_min" min="18" max="99" placeholder="מגיל" aria-label="מגיל" value="{{ p.age_min or '' }}" required>
+        <input type="number" name="age_max" min="18" max="99" placeholder="עד גיל" aria-label="עד גיל" value="{{ p.age_max or '' }}" required>
+      </div></div>
+    <div class="field"><label for="dist">מרחק מקסימלי</label>
+      <select id="dist" name="max_distance_km" required>{% for v, label in distances %}<option value="{{ v }}" {% if (p.max_distance_km or 50)|int == v %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+    <div class="field"><span class="label">מה אני מחפש/ת</span>{{ radio("intent", intents, p.intent) }}</div>
+    <div class="field"><span class="label">יש לי ילדים</span>{{ radio("has_kids", [("1","כן"),("0","לא")], (1 if p.has_kids else 0) if p.has_kids is not none else none) }}</div>
+    <div class="field"><span class="label">ילדים בעתיד</span>{{ radio("wants_kids", wants_kids, p.wants_kids) }}</div>
+    <div class="field"><span class="label">בן/בת זוג עם ילדים</span>{{ radio("accepts_partner_with_kids", [("1","מתאים לי"),("0","פחות מתאים לי")], (1 if p.accepts_partner_with_kids else 0) if p.facts_done_at else none) }}</div>
+    <div class="field"><span class="label">דתיות</span>{{ radio("religiosity", religiosity, p.religiosity) }}</div>
+    <div class="field"><span class="label">עישון</span>{{ radio("smoking", smoking, p.smoking) }}</div>
+    <div class="field"><span class="label">עישון אצל בן/בת הזוג</span>{{ radio("max_partner_smoking", partner_smoking, p.max_partner_smoking if p.facts_done_at else none) }}</div>
+
+    <div class="field"><span class="label">תמונות ({{ min_photos }}–{{ max_photos }})</span>
+      <span class="hint">תמונות עדכניות שבהן רואים את הפנים. JPG/PNG/WEBP, עד {{ settings.max_upload_bytes // 1048576 }}MB לתמונה. התמונות מוצגות רק למי שמוצע לך.</span>
+      {% if p.photos %}<div class="photos">{% for ph in p.photos %}<figure><img src="/media/{{ ph.id }}" alt="תמונה {{ loop.index }}"><label><input type="checkbox" name="remove_photo" value="{{ ph.id }}"> הסרה</label></figure>{% endfor %}</div>{% endif %}
+      <input type="file" name="photos" accept="image/jpeg,image/png,image/webp" multiple>
+    </div>
+    <button class="btn" type="submit">המשך לשיחה עם עדי</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "admin_base.html" %}
+{% block title %}מדדים{% endblock %}
+{% block body %}
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+  <h2>מדדי הפיילוט</h2>
+  <div class="actions"><a class="sbtn" href="/admin/export/metrics.csv">CSV מדדים</a><a class="sbtn" href="/admin/export/pairs.csv">CSV זוגות ותשובות</a></div>
+</div>
+{% set c = m.counts %}
+<div class="kpis">
+  <div class="kpi"><span class="v">{{ m.H1_interview_completion_pct|pct }}</span><span class="k">H1 · השלימו ראיון<br>{{ c.interviewed }} מתוך {{ c.consented }} שאישרו</span></div>
+  <div class="kpi"><span class="v">{{ m.H2_three_is_enough_avg if m.H2_three_is_enough_avg is not none else '—' }}</span><span class="k">H2 · "שלוש זה מספיק" (1–5)<br>{{ c.survey_answers }} תשובות</span></div>
+  <div class="kpi"><span class="v">{{ m.H3_mutual_accept_pct|pct }}</span><span class="k">H3 · הצעות שהפכו להתאמה הדדית<br>מתוך {{ c.proposals }} הצעות ({{ m.H3_mutual_of_fully_answered_pct|pct }} מאלה ששני הצדדים ענו)</span></div>
+  <div class="kpi"><span class="v">{{ m.H4_replied_48h_pct|pct }}</span><span class="k">H4 · הגיבו בקבוצה תוך 48 שעות<br>(לפי סימון הצוות)</span></div>
+  <div class="kpi"><span class="v">{{ m.H5_date_within_7d_pct|pct }}</span><span class="k">H5 · התאמות עם דייט תוך 7 ימים<br>מתוך {{ c.matches }} התאמות</span></div>
+  <div class="kpi"><span class="v">{{ m.H6_paid_of_invited_pct|pct }}</span><span class="k">H6 · שילמו מתוך המוזמנים<br>{{ c.paid }} / {{ c.invited }}</span></div>
+  <div class="kpi"><span class="v">{{ m.second_date_pct|pct }}</span><span class="k">דייט שני (שניהם "כן")<br>מתוך {{ c.dates }} דייטים</span></div>
+  <div class="kpi"><span class="v">{{ m.yes_rate_pct|pct }}</span><span class="k">שיעור "כן" בתשובות</span></div>
+</div>
+<div class="table-wrap"><table>
+  <thead><tr><th>Drop</th><th>שבוע</th><th>סטטוס</th><th>זוגות</th><th>משתתפים</th><th>הדדיות</th></tr></thead>
+  <tbody>{% for d in m.per_drop %}<tr><td>#{{ d.id }}</td><td>{{ d.week_start }}</td><td>{{ d.status }}</td><td>{{ d.pairs }}</td><td>{{ d.users }}</td><td>{{ d.mutual }}</td></tr>{% else %}<tr><td colspan="6" class="small">אין עדיין.</td></tr>{% endfor %}</tbody>
+</table></div>
+<p class="small">הגדרות: H1 = ראיון הושלם / אישרו תנאים. H3 = הצעות הדדיות / כל ההצעות שפורסמו. H4 = מתוך ההתאמות שהצוות סימן. H5 = דייט שסומן תוך 7 ימים מיצירת ההתאמה / כל ההתאמות. דייט שני = שני התחקירים "כן" / התאמות עם דייט.</p>
+{% endblock %}
