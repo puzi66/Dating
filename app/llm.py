@@ -47,11 +47,12 @@ class LLMClient(Protocol):
 class AnthropicLLM:
     name = "anthropic"
 
-    def __init__(self, api_key: str, model: str, use_fallbacks: bool = True) -> None:
+    def __init__(self, api_key: str, model: str, use_fallbacks: bool = True, http_client=None) -> None:  # noqa: ANN001
         import anthropic  # imported lazily so the fake path never needs a key
 
         self._anthropic = anthropic
-        self.client = anthropic.AsyncAnthropic(api_key=api_key, timeout=120.0, max_retries=2)
+        extra = {"http_client": http_client} if http_client is not None else {}
+        self.client = anthropic.AsyncAnthropic(api_key=api_key, timeout=120.0, max_retries=2, **extra)
         self.model = model
         self.use_fallbacks = use_fallbacks
 
