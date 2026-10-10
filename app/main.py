@@ -46,7 +46,10 @@ def create_app(settings: Settings | None = None, db: Database | None = None,
         resp.headers.setdefault("X-Content-Type-Options", "nosniff")
         resp.headers.setdefault("X-Frame-Options", "DENY")
         resp.headers.setdefault("Referrer-Policy", "no-referrer")   # secret links must never leak
-        resp.headers.setdefault("Cache-Control", "no-store")
+        if request.url.path.startswith("/static/"):
+            resp.headers.setdefault("Cache-Control", "public, max-age=86400")
+        else:
+            resp.headers.setdefault("Cache-Control", "no-store")
         return resp
 
     # Signed cookie session (itsdangerous). Added last so it wraps everything.

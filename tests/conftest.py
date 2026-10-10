@@ -35,9 +35,16 @@ def app_env(tmp_path, fake_llm):
     from app.main import create_app
     from app.storage import LocalStorage
 
-    s = replace(settings, database_url=f"sqlite:///{tmp_path / 'test.db'}", upload_dir=tmp_path / "uploads",
+    # TEST_DATABASE_URL=postgresql://... runs the same tests against Postgres (tables are reset per test).
+    url = os.environ.get("TEST_DATABASE_URL") or f"sqlite:///{tmp_path / 'test.db'}"
+    from app.config import _normalize_db_url
+    s = replace(settings, database_url=_normalize_db_url(url), upload_dir=tmp_path / "uploads",
                 max_upload_bytes=200_000, interview_max_user_turns=5, interview_min_user_turns=2)
     db = Database(s.database_url)
+    if os.environ.get("TEST_DATABASE_URL"):
+        from app.db import Base
+        import app.models  # noqa: F401
+        Base.metadata.drop_all(db.engine)
     app = create_app(settings=s, db=db, llm=fake_llm, storage=LocalStorage(s.upload_dir))
     return app, db
 

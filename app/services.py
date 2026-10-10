@@ -26,7 +26,7 @@ from matching.scoring import Features, explain_pair, score_pair
 from .llm import LLMClient, LLMError
 from .models import (Debrief, DropRow, LearningStateRow, MatchRow, Participant, ParticipantStatus,
                      ProposalRow, SurveyResponse, utcnow)
-from .prompts import VALUE_LABELS_HE
+from .prompts import VALUE_LABELS_HE, signal_label_he
 
 log = logging.getLogger("app.services")
 IL = ZoneInfo("Asia/Jerusalem")
@@ -201,8 +201,15 @@ def _proposal_from_score(drop_id: int, pool: Pool, a: int, b: int, source: str) 
         drop_id=drop_id, user_low_id=lo, user_high_id=hi, mutual_score=ps.mutual,
         score_low_to_high=ps.s_ab, score_high_to_low=ps.s_ba,
         features={"low_high": list(ps.f_ab.as_tuple()), "high_low": list(ps.f_ba.as_tuple())},
-        explanation=expl.to_dict(), source=source,
+        explanation=_pilot_explanation(expl.to_dict()), source=source,
     )
+
+
+def _pilot_explanation(expl: dict) -> dict:
+    """Pilot visual vectors are neutral (identical for everyone), so the engine's
+    'mutual visual chemistry' signal is meaningless here and is dropped. Labels get Hebrew."""
+    sigs = [s | {"label_he": signal_label_he(s)} for s in expl.get("top_signals", []) if s["kind"] != "visual"]
+    return expl | {"top_signals": sigs}
 
 
 # =========================================================================== Drop workflow
@@ -328,7 +335,7 @@ def pair_brief(a: Participant, b: Participant, explanation: dict) -> str:
         weekend = (p.lifestyle or {}).get("weekend", "")
         return (f"- {p.first_name}, {p.age}, {p.city}. ערכים בולטים: {vals}. "
                 f"מחפש/ת: {looking}. סוף שבוע טוב: {weekend}")
-    shared = ", ".join(s["label"] for s in explanation.get("top_signals", []) if s["kind"] != "visual")
+    shared = ", ".join(signal_label_he(s) for s in explanation.get("top_signals", []) if s["kind"] != "visual")
     return f"{side(a)}\n{side(b)}\nמשותף לפי המנוע: {shared or 'לא צוין'}"
 
 

@@ -165,3 +165,19 @@ WHY_SCHEMA = {
     "required": ["text"],
     "additionalProperties": False,
 }
+
+
+# Engine explanation labels (matching.scoring) -> Hebrew, for the admin and the why-text brief.
+LIFESTYLE_SIGNAL_HE = {
+    "the same approach to religion and tradition": "אותה גישה לדת ולמסורת",
+    "the same relationship goals": "אותן מטרות בקשר",
+    "the same plans about kids": "אותן תוכניות לגבי ילדים",
+    "the same smoking habits": "אותם הרגלי עישון",
+    "living close to each other": "גרים קרוב",
+    "being at a similar stage of life": "שלב דומה בחיים",
+}
+
+
+def signal_label_he(signal: dict) -> str:
+    label = signal.get("label", "")
+    return VALUE_LABELS_HE.get(label) or LIFESTYLE_SIGNAL_HE.get(label) or label

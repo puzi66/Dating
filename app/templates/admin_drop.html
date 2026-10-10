@@ -54,12 +54,13 @@
       <b><a href="/admin/participants/{{ a.id }}">{{ a.display_name }}</a> ({{ a.age }}, {{ load[a.id] }}/{{ cap }}) + <a href="/admin/participants/{{ b.id }}">{{ b.display_name }}</a> ({{ b.age }}, {{ load[b.id] }}/{{ cap }})</b>
       <span class="pill">{{ '%.3f'|format(pr.mutual_score) }}</span>
     </div>
-    <div class="small">S({{ a.first_name }}→{{ b.first_name }}) = {{ '%.3f'|format(pr.score_low_to_high) }} · S({{ b.first_name }}→{{ a.first_name }}) = {{ '%.3f'|format(pr.score_high_to_low) }}{% if pr.source == 'swap' %} · <span class="tag">החלפה ידנית</span>{% endif %}</div>
+    <div class="small">S({{ a.first_name }}←{{ b.first_name }}) = {{ '%.3f'|format(pr.score_low_to_high) }} · S({{ b.first_name }}←{{ a.first_name }}) = {{ '%.3f'|format(pr.score_high_to_low) }}{% if pr.source == 'swap' %} · <span class="tag">החלפה ידנית</span>{% endif %}</div>
     <div class="two">
-      <div><span class="small">{{ a.first_name }}→{{ b.first_name }}</span>{{ bars(pr.features.low_high) }}</div>
-      <div><span class="small">{{ b.first_name }}→{{ a.first_name }}</span>{{ bars(pr.features.high_low) }}</div>
+      <div><span class="small">{{ a.first_name }}←{{ b.first_name }}</span>{{ bars(pr.features.low_high) }}</div>
+      <div><span class="small">{{ b.first_name }}←{{ a.first_name }}</span>{{ bars(pr.features.high_low) }}</div>
     </div>
-    <div class="actions">{% for s in pr.explanation.get('top_signals', []) %}<span class="tag">{{ s.label }}</span>{% endfor %}</div>
+    <span class="small">ויזואלי = 1.00 לכולם בפיילוט (וקטורים ניטרליים, ללא כיול אווטארים)</span>
+    <div class="actions">{% for s in pr.explanation.get('top_signals', []) %}<span class="tag">{{ s.label_he or s.label }}</span>{% endfor %}</div>
     {% if a.red_flags or b.red_flags %}<div class="small" style="color:#f3c2b6">⚑ {% for f in a.red_flags %}{{ a.first_name }}: {{ f }}. {% endfor %}{% for f in b.red_flags %}{{ b.first_name }}: {{ f }}. {% endfor %}</div>{% endif %}
     {% if drop.status == 'draft' %}
     <form method="post" action="/admin/drops/{{ drop.id }}/text" class="form" style="gap:6px">

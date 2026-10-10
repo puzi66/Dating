@@ -1,0 +1,4 @@
+-r requirements.txt
+pytest==9.1.1
+# only for scripts/screenshots.py (uses a preinstalled Chromium; no `playwright install` needed there)
+playwright==1.56.0
