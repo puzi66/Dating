@@ -165,10 +165,10 @@ async def facts_post(request: Request, p: Participant = Depends(me), db: Session
     p.religiosity, p.smoking, p.max_partner_smoking = religiosity, smoking, partner_smoking
     for ph in p.photos:
         if ph.id in remove_ids:
-            storage.delete(ph.storage_key)
+            storage.delete(ph.storage_key, session=db)
             db.delete(ph)
     for i, (data, ctype) in enumerate(new_photos):
-        key = storage.save(data, ctype, prefix=f"p{p.id}")
+        key = storage.save(data, ctype, prefix=f"p{p.id}", session=db)
         db.add(Photo(participant_id=p.id, storage_key=key, content_type=ctype, ordinal=len(kept) + i))
     p.facts_done_at = p.facts_done_at or utcnow()
     db.commit()

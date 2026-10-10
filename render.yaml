@@ -1,27 +1,22 @@
-# Render Blueprint: one web service (Docker) + managed Postgres + a persistent disk for photos.
-# Deploy: Render dashboard -> New -> Blueprint -> pick this repo. Then fill the `sync: false` values.
+# FREE setup for team testing: Render free web service + free Neon Postgres, photos stored in the DB.
+# Limits: the server sleeps after ~15 min idle (first visit then waits 30-60s). Before the real pilot,
+# switch to render.paid.yaml (always-on). Deploy: Render dashboard -> New -> Blueprint -> pick this repo.
 services:
   - type: web
     name: shalosh-pilot
     runtime: docker
-    plan: starter            # a persistent disk needs a paid instance
+    plan: free
     region: frankfurt
     healthCheckPath: /healthz
-    disk:
-      name: shalosh-data
-      mountPath: /var/data
-      sizeGB: 1
     envVars:
       - key: APP_ENV
         value: production
-      - key: DATA_DIR
-        value: /var/data
+      - key: STORAGE
+        value: db              # no persistent disk on the free plan
       - key: SECRET_KEY
         generateValue: true
       - key: DATABASE_URL
-        fromDatabase:
-          name: shalosh-db
-          property: connectionString
+        sync: false            # paste the Neon connection string (postgresql://...?sslmode=require)
       - key: ADMIN_USER
         sync: false
       - key: ADMIN_PASSWORD
@@ -29,13 +24,6 @@ services:
       - key: ANTHROPIC_API_KEY
         sync: false
       - key: BASE_URL
-        sync: false          # e.g. https://shalosh-pilot.onrender.com or your own domain
+        sync: false            # e.g. https://shalosh-pilot.onrender.com
       - key: CLAUDE_MODEL
         value: claude-sonnet-5-5
-
-databases:
-  - name: shalosh-db
-    plan: basic-256mb
-    region: frankfurt
-    databaseName: shalosh
-    ipAllowList: []          # only reachable from Render services

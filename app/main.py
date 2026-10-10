@@ -13,7 +13,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from .config import Settings, settings as default_settings
 from .db import Database
 from .llm import LLMClient, make_llm
-from .storage import LocalStorage, Storage
+from .storage import Storage, make_storage
 from .web import HERE, render
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -29,7 +29,7 @@ def create_app(settings: Settings | None = None, db: Database | None = None,
     app.state.db = db or Database(settings.database_url)
     app.state.db.create_all()
     app.state.llm = llm or make_llm(settings)
-    app.state.storage = storage or LocalStorage(settings.upload_dir)
+    app.state.storage = storage or make_storage(settings, app.state.db)
 
     from .routes_admin import router as admin_router
     from .routes_participant import router as participant_router

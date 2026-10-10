@@ -38,6 +38,7 @@ class Settings:
     admin_password: str = ""
     base_url: str = "http://localhost:8000"
     upload_dir: Path = field(default_factory=lambda: ROOT / "data" / "uploads")
+    storage_backend: str = "local"   # "local" (disk) | "db" (photo bytes in the database)
     max_upload_bytes: int = 8 * 1024 * 1024
     cookie_secure: bool = False
     anthropic_api_key: str = ""
@@ -74,6 +75,7 @@ def load_settings() -> Settings:
         admin_password=os.environ.get("ADMIN_PASSWORD", ""),
         base_url=os.environ.get("BASE_URL", "http://localhost:8000").rstrip("/"),
         upload_dir=Path(os.environ.get("UPLOAD_DIR", str(data_dir / "uploads"))),
+        storage_backend=os.environ.get("STORAGE", "local").strip().lower(),
         max_upload_bytes=int(os.environ.get("MAX_UPLOAD_MB", "8")) * 1024 * 1024,
         cookie_secure=_bool("COOKIE_SECURE", env == "production"),
         anthropic_api_key=os.environ.get("ANTHROPIC_API_KEY", "").strip(),

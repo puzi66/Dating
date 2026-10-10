@@ -249,7 +249,9 @@ python scripts/screenshots.py   # מעבר E2E ושמירת צילומים ב-do
 ### פריסה ל-Render
 
 1. לדחוף את הריפו ל-GitHub (אין עדיין remote).
-2. ב-Render: New → Blueprint → לבחור את הריפו. `render.yaml` יוצר שירות ווב (Docker), Postgres מנוהל ודיסק קבוע של 1GB ב-`/var/data` לתמונות. דיסק קבוע דורש תוכנית בתשלום (starter).
+2. ב-Render: New → Blueprint → לבחור את הריפו. יש שתי גרסאות:
+   * **`render.yaml` (חינם, לבדיקות הצוות):** שירות ווב בתוכנית free ו-Postgres חינמי של [Neon](https://neon.tech). את מחרוזת החיבור של Neon מדביקים ב-`DATABASE_URL`. התמונות נשמרות במסד (`STORAGE=db`) כי אין דיסק קבוע. השרת נרדם אחרי כ-15 דקות בלי תנועה, והכניסה הראשונה אחרי זה לוקחת 30–60 שניות.
+   * **`render.paid.yaml` (כ-$14 לחודש, לפיילוט האמיתי):** שרת שתמיד ער, Postgres מנוהל של Render ודיסק קבוע של 1GB ב-`/var/data` לתמונות. כדי לעבור אליו משנים את שמו ל-`render.yaml`.
 3. למלא את המשתנים שמסומנים `sync: false`: `ADMIN_USER`, `ADMIN_PASSWORD`, `ANTHROPIC_API_KEY`, `BASE_URL` (למשל `https://shalosh-pilot.onrender.com`). `SECRET_KEY` נוצר אוטומטית.
 4. אחרי הפריסה: לבדוק `/healthz` (צריך להחזיר `"llm": "anthropic"`), להיכנס ל-`/admin`, ליצור משתתף/ת ניסיון ולעבור את כל הזרימה מהטלפון לפני ששולחים קישורים אמיתיים.
 5. הטבלאות נוצרות אוטומטית בעלייה הראשונה (`create_all`). אין מיגרציות: שינוי סכמה במהלך הפיילוט דורש `ALTER TABLE` ידני או Alembic.

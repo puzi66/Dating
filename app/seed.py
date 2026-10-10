@@ -23,7 +23,7 @@ from .models import InterviewMessage, Participant, Photo, utcnow
 from .profile import neutral_visual_vector, values_vector
 from .prompts import LIFESTYLE_FIELDS, VALUE_LABELS_HE
 from .security import new_token
-from .storage import LocalStorage
+from .storage import Storage, make_storage
 
 PEOPLE = [
     # first, last, gender, age, city, religiosity, intent, values emphasis
@@ -68,7 +68,7 @@ def placeholder_png(w: int, h: int, bg: tuple, fg: tuple, seed: int) -> bytes:
             + chunk(b"IDAT", zlib.compress(raw, 6)) + chunk(b"IEND", b""))
 
 
-def seed(db: Database, storage: LocalStorage, rng: random.Random) -> list[Participant]:
+def seed(db: Database, storage: Storage, rng: random.Random) -> list[Participant]:
     created = []
     now = utcnow()
     with db.SessionLocal() as s:
@@ -109,7 +109,7 @@ def seed(db: Database, storage: LocalStorage, rng: random.Random) -> list[Partic
             bg, fg = PALETTES[i % len(PALETTES)]
             for k in range(2):
                 data = placeholder_png(240, 300, bg if k == 0 else fg, fg if k == 0 else bg, i * 10 + k)
-                key = storage.save(data, "image/png", prefix=f"p{p.id}")
+                key = storage.save(data, "image/png", prefix=f"p{p.id}", session=s)
                 s.add(Photo(participant_id=p.id, storage_key=key, content_type="image/png", ordinal=k))
             created.append(p)
         for first, last in IN_PROGRESS:
@@ -134,7 +134,7 @@ def main(argv: list[str] | None = None) -> None:
         import shutil
         shutil.rmtree(settings.upload_dir, ignore_errors=True)
     db.create_all()
-    parts = seed(db, LocalStorage(settings.upload_dir), random.Random(args.seed))
+    parts = seed(db, make_storage(settings, db), random.Random(args.seed))
     print(f"Seeded into {settings.database_url}")
     for p in parts:
         print(f"  #{p.id:<3} {p.display_name:<16} {settings.base_url}/p/{p.token}")

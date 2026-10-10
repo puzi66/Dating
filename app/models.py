@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 
-from sqlalchemy import (JSON, Boolean, Date, DateTime, Float, ForeignKey, Integer, String, Text,
+from sqlalchemy import (JSON, Boolean, Date, DateTime, Float, ForeignKey, Integer, LargeBinary, String, Text,
                         UniqueConstraint)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -123,6 +123,16 @@ class Photo(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
     participant: Mapped[Participant] = relationship(back_populates="photos")
+
+
+class StoredBlob(Base):
+    """Photo bytes kept in the database (STORAGE=db), for hosts without a persistent disk."""
+    __tablename__ = "stored_blobs"
+
+    key: Mapped[str] = mapped_column(String(255), primary_key=True)
+    content_type: Mapped[str] = mapped_column(String(64))
+    data: Mapped[bytes] = mapped_column(LargeBinary)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
 
 class InterviewMessage(Base):
